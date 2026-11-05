@@ -63,7 +63,6 @@ class MaskForgeTokenizer:
             trainer=trainer,
         )
 
-# Register special tokens individually.
         for token in cls.SPECIAL_TOKENS:
             tokenizer.add_special_tokens([
                AddedToken(token, special=True)
