@@ -1,0 +1,12 @@
+torch
+tokenizers>=0.20
+numpy
+PyYAML
+
+[dev]
+pytest
+ruff
+
+[serving]
+fastapi
+uvicorn

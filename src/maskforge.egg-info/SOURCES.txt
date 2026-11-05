@@ -1,0 +1,6 @@
+pyproject.toml
+src/maskforge.egg-info/PKG-INFO
+src/maskforge.egg-info/SOURCES.txt
+src/maskforge.egg-info/dependency_links.txt
+src/maskforge.egg-info/requires.txt
+src/maskforge.egg-info/top_level.txt
