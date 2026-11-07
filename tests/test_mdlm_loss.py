@@ -37,6 +37,7 @@ def test_no_true_values():
     
         logits = torch.zeros((2, 4, 2))
         logits[:, :, 1] = other_logit
+        logits.requires_grad_()
     
         loss = mdlm_loss(
             logits=logits,
@@ -48,3 +49,9 @@ def test_no_true_values():
         expected_loss = 0.0
     
         assert torch.isclose(loss, torch.tensor(expected_loss), atol=1e-5)
+        assert loss.requires_grad is True
+
+        loss.backward()
+
+        assert logits.grad is not None
+        assert torch.all(logits.grad == 0)
