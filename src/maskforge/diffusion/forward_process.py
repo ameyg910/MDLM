@@ -36,11 +36,6 @@ def forward_corrupt(
 
     mask_positions = random_mask & ~special_positions
     noisy_input_ids = input_ids.clone()
-    print("Random values:\n", random_values)
-    print("Timesteps:\n", t)
-    print("Random mask:\n", random_mask)
-    print("Special positions:\n", special_positions)
-    print("Final mask positions:\n", mask_positions)
 
     noisy_input_ids[mask_positions] = mask_token_id
 
