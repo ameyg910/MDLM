@@ -8,7 +8,7 @@ from torch.optim import AdamW
 
 from maskforge.models.denoiser import MaskForgeDenoiser
 from maskforge.training.train import train
-
+from maskforge.diffusion.forward_process import forward_corrupt
 
 def main():
     # 1. Select device
@@ -84,6 +84,69 @@ def main():
        num_epochs=20,
        checkpoint_dir="checkpoints/toy",
     )
+    model.eval()
+
+    correct = 0
+    total = 0
+
+    target_counts = torch.zeros(
+       tokenizer.vocab_size,
+       dtype=torch.long,
+       device=device,
+    )
+
+    with torch.no_grad():
+      for batch in dataloader:
+        input_ids = batch["input_ids"].to(device)
+        attention_mask = batch["attention_mask"].to(device)
+
+        batch_size = input_ids.shape[0]
+
+        t = torch.full(
+            (batch_size,),
+            0.5,
+            device=device,
+        )
+
+        noisy_input_ids, mask_positions = forward_corrupt(
+            input_ids=input_ids,
+            t=t,
+            mask_token_id=tokenizer.mask_token_id,
+            pad_token_id=tokenizer.pad_token_id,
+            bos_token_id=tokenizer.bos_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+
+        logits = model(
+            input_ids=noisy_input_ids,
+            t=t,
+            attention_mask=attention_mask,
+        )
+
+        predictions = logits.argmax(dim=-1)
+
+        masked_targets = input_ids[mask_positions]
+
+        target_counts += torch.bincount(
+            masked_targets,
+            minlength=tokenizer.vocab_size,
+        )
+
+        correct += (
+            (predictions == input_ids) & mask_positions
+        ).sum().item()
+
+        total += mask_positions.sum().item()
+
+# Calculate metrics AFTER processing every batch.
+    accuracy = correct / total if total > 0 else 0.0
+
+    baseline_accuracy = (
+       target_counts.max().item() / total if total > 0 else 0.0
+    )
+
+    print(f"Model accuracy:    {accuracy:.4f}")
+    print(f"Majority baseline: {baseline_accuracy:.4f}")
 
     # Inspect one batch
     batch = next(iter(dataloader))
